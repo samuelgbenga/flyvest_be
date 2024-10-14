@@ -1,60 +1,125 @@
 package com.flyvestmobile.flyvest.mobile.application.service.impl;
 
 import com.flyvestmobile.flyvest.mobile.application.config.JwtService;
+import com.flyvestmobile.flyvest.mobile.application.entity.ConfirmationToken;
 import com.flyvestmobile.flyvest.mobile.application.entity.User;
 import com.flyvestmobile.flyvest.mobile.application.entity.VerificationToken;
+import com.flyvestmobile.flyvest.mobile.application.enums.Role;
 import com.flyvestmobile.flyvest.mobile.application.enums.TokenType;
+import com.flyvestmobile.flyvest.mobile.application.exceptions.AlreadyExistsException;
+import com.flyvestmobile.flyvest.mobile.application.exceptions.InvalidInputException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.NotEnabledException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.NotFoundException;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.AuthRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.EmailDetails;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.LoginRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.AuthResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.LoginResponse;
+import com.flyvestmobile.flyvest.mobile.application.repository.ConfirmationTokenRepo;
 import com.flyvestmobile.flyvest.mobile.application.repository.UserRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.VerificationTokenRepo;
 import com.flyvestmobile.flyvest.mobile.application.service.AuthService;
+import com.flyvestmobile.flyvest.mobile.application.service.EmailService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final JwtService jwtService;
     private final UserRepository userRepository;
-    private final VerificationTokenRepo verificationTokenRepo;
+    private final ConfirmationTokenRepo confirmationTokenRepo;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final VerificationTokenRepo verificationTokenRepo;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+
 
     @Override
-    public LoginResponse loginUser(LoginRequest loginRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
-        User person = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(()-> new NotFoundException("User is not found"));
+    public AuthResponse register(AuthRequest authRequest) throws MessagingException {
 
-        if (!person.isEnabled()){
-            throw new NotEnabledException("User account is not enabled. Please check your email to confirm your account.");
+        Optional<User> existingUser = userRepository.findByEmail(authRequest.getEmail());
+        if (existingUser.isPresent()) {
+            throw new AlreadyExistsException("User already exists, please Login");
         }
 
-        var jwtToken = jwtService.generateToken(person);
-        revokeAllUserTokens(person);
-        saveUserToken(person, jwtToken);
-
-
-
-
-        return LoginResponse.builder()
-                .responseCode("002")
-                .responseMessage("Your have been logged in successfully")
-                .token(jwtToken)
+        User user = User.builder()
+                .fullName(authRequest.getFirstname() + " " + authRequest.getLastname())
+                .email(authRequest.getEmail())
+                .password(passwordEncoder.encode(authRequest.getPassword()))
+                .role(Role.USER)
                 .build();
+
+        User savedUser = userRepository.save(user);
+
+
+        ConfirmationToken confirmationToken = new ConfirmationToken(savedUser);
+        confirmationTokenRepo.save(confirmationToken);
+        System.out.println(confirmationToken.getToken());
+
+        String confirmationUrl = "http://localhost:8080/api/v1/auth/confirm?token=" + confirmationToken.getToken();
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(user.getEmail())
+                .subject("ACCOUNT CREATION SUCCESSFUL")
+                .messageBody("Congratulations! You account has been successfully created \n "
+                        + user.getEmail() + "\n" + savedUser.getFullName())
+                .build();
+
+        emailService.sendSimpleMailMessage(emailDetails, savedUser.getFullName(), confirmationUrl);
+
+        return AuthResponse.builder()
+                .responseCode("001")
+                .responseMessage("Confirm your email")
+                .build();
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest loginRequest) {
+        try{
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new NotFoundException("User not found with username: " + loginRequest.getEmail()));
+
+
+            if (!user.isEnabled()) {
+                throw new NotEnabledException("User account is not enabled. Please check your email to confirm your account.");
+            }
+
+            var jwtToken = jwtService.generateToken(user);
+            revokeAllUserTokens(user);
+            saveUserToken(user, jwtToken);
+
+            return LoginResponse.builder()
+                    .responseCode("002")
+                    .responseMessage("Login Successfully")
+                    .token(jwtToken)
+                    .build();
+
+        }catch (AuthenticationException e) {
+            throw new InvalidInputException("Invalid username or password!!");
+        }
     }
 
     private void saveUserToken(User user, String jwtToken){
@@ -77,4 +142,6 @@ public class AuthServiceImpl implements AuthService {
         });
         verificationTokenRepo.saveAll(validUserTokens);
     }
+
+
 }
