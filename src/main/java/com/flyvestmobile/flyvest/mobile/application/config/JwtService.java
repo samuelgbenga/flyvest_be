@@ -17,8 +17,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    @Value("${jwt.secret.key}")
-    private static String SECRET_KEY;
+
+    private static final String SECRET_KEY= "XC5+w+IPqkLyUQfLrl1hRvqfbklL98TbnhmvIyTaxJSZpzrfxQQiLsdA5Q62+E8TL8zduk1goWnOav542wEuFg==";
 
     private Claims extractAllClaims(String token) {
         return Jwts

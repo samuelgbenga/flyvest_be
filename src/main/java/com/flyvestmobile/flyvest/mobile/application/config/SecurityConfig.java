@@ -9,7 +9,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -25,32 +27,46 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final JwtService jwtService;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-         http.authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(antMatcher(HttpMethod.GET, "/swagger-ui.html"),
-                                    antMatcher(HttpMethod.GET, "/"),
-                            antMatcher(HttpMethod.GET, "/swagger-ui/**"),
-                            antMatcher(HttpMethod.GET, "/v3/api-docs/**"),
-                            antMatcher(HttpMethod.GET, "/swagger-resources/**"))
-
-                            .permitAll();
-                    auth.requestMatchers("/favicon.ico").permitAll();
-                    auth.anyRequest().authenticated();
+        http.csrf(CsrfConfigurer::disable)
+                .authorizeHttpRequests(auth -> {
+                    auth
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/auth/**").permitAll()
+                            .requestMatchers(
+                                    "/swagger-ui.html",
+                                    "/swagger-ui/**",
+                                    "/v3/api-docs/**",
+                                    "/swagger-resources/**",
+                                    "/favicon.ico"
+                            ).permitAll()
+                            // Allow access to the login page
+                            .requestMatchers("/login").permitAll()
+                            .anyRequest().authenticated();
                 })
-                .oauth2Login(withDefaults())
-                 .exceptionHandling(exception -> exception
-                         .authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                 .sessionManagement(session -> session
-                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                 .httpBasic(Customizer.withDefaults());
 
+                // OAuth2 Login Configuration for Google and GitHub
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")  // Custom login page endpoint
+                        .successHandler((request, response, authentication) -> {
+                            // On successful OAuth2 login, generate and add JWT to the response
+                            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                            String token = jwtService.generateToken(userDetails);
+                            response.addHeader("Authorization", "Bearer " + token);
+                        })
+                )
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(Customizer.withDefaults());
         http.authenticationProvider(authenticationProvider);
-
-
 
         return http.build();
     }
