@@ -64,6 +64,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token is not valid");
         }
     }
-
-
 }
