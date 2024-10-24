@@ -17,7 +17,7 @@ public class Mentor extends BaseEntity{
 
     private String mentorName;
     private String expertise;
-    private Double rating;
+    private double averageRating;
 
     @OneToMany(mappedBy = "mentor")
     private List<Booking> bookings;
