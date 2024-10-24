@@ -1,6 +1,7 @@
 package com.flyvestmobile.flyvest.mobile.application.service;
 
 import com.flyvestmobile.flyvest.mobile.application.payload.request.AuthRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.ForgotPasswordRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.LoginRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.AuthResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.LoginResponse;
@@ -12,7 +13,7 @@ public interface AuthService {
 
     LoginResponse login (LoginRequest loginRequest);
 
-    //String forgotPassword(String email);
+    String forgotPassword(ForgotPasswordRequest email);
 
-    //String newResetPassword(String token, String newPassword);
+    public String resetPassword(String email, int pin, String newPassword);
 }
