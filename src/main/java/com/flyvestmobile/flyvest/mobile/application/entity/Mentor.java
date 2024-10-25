@@ -3,6 +3,7 @@ package com.flyvestmobile.flyvest.mobile.application.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -11,18 +12,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Builder
-@Table(name = "mentor_tbl")
-public class Mentor extends BaseEntity{
+@SuperBuilder
+public class Mentor extends User {
 
-    private String mentorName;
     private String expertise;
-    private Double rating;
+    private double averageRating;
 
     @OneToMany(mappedBy = "mentor")
     private List<Booking> bookings;
-
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
 }

@@ -12,8 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthRequest {
-
+public class AddMentorRequest {
     @NotBlank(message = "Firstname is required")
     private String firstname;
 
@@ -23,9 +22,7 @@ public class AuthRequest {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid Email format")
     private String email;
-
-    @NotBlank(message = "Password is required")
-    private String password;
-
+    private String country;
+    private String expertise;
     private MultipartFile profilePicture;
 }

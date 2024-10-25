@@ -3,6 +3,7 @@ package com.flyvestmobile.flyvest.mobile.application.entity;
 import com.flyvestmobile.flyvest.mobile.application.enums.TokenType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 
 @Setter
@@ -11,7 +12,7 @@ import lombok.*;
 @Table(name = "verification_token")
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 public class VerificationToken extends BaseEntity {
 
     @Column(unique = true)
