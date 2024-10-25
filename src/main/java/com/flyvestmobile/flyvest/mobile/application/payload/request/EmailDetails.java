@@ -13,6 +13,7 @@ public class EmailDetails {
 
     private String fullName;
 
+
     private String recipient;
 
     private String messageBody;

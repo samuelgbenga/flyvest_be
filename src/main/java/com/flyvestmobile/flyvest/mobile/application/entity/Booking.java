@@ -1,10 +1,12 @@
 package com.flyvestmobile.flyvest.mobile.application.entity;
 
+import com.flyvestmobile.flyvest.mobile.application.enums.Status;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
@@ -14,7 +16,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Builder
+@SuperBuilder
 @Table(name = "booking_tbl")
 public class Booking extends BaseEntity{
 
@@ -28,4 +30,6 @@ public class Booking extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
+
+    private Status status;
 }
