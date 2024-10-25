@@ -83,25 +83,19 @@ public class UserServiceImpl implements UserService {
 
         String generatedPassword = AccountUtils.generatePassword();
 
-        User user = User.builder()
+
+        // Create the Mentor entity with additional mentor-specific fields
+        Mentor mentor = Mentor.builder()
                 .fullName(request.getFirstname()+ " " + request.getLastname())
                 .email(request.getEmail())
                 .profilePicture(profilePictureUrl)
                 .password(passwordEncoder.encode(generatedPassword)) // Encrypt password
                 .country(request.getCountry())
                 .role(Role.MENTOR)  // Assign MENTOR role
-                .enabled(true)      // Automatically enable the mentor
-                .build();
-
-        // Save the new user to the repository
-        User savedUser = userRepository.save(user);
-
-        // Create the Mentor entity with additional mentor-specific fields
-        Mentor mentor = Mentor.builder()
-                .mentorName(savedUser.getFullName())
+                .enabled(true)
                 .expertise(request.getExpertise())
                 .averageRating(0.0)  // Start with a zero rating
-                .user(savedUser)     // Associate the saved User
+                   // Associate the saved User
                 .build();
 
         // Save and return the Mentor entity
@@ -111,11 +105,11 @@ public class UserServiceImpl implements UserService {
         // Set up email message for the registered user/employee
         String userLoginUrl = baseUrl + "/user/login";
 
-        String emailContent = EmailBody.addMentorEmail(savedMentor.getMentorName(), savedUser.getEmail(), generatedPassword, userLoginUrl);
+        String emailContent = EmailBody.addMentorEmail(savedMentor.getFullName(), mentor.getEmail(), generatedPassword, userLoginUrl);
         EmailDetails emailDetails = EmailDetails.builder()
-                .fullName(savedUser.getFullName())
-                .recipient(savedUser.getEmail())
-                .subject("Welcome to Qlock-in")
+                .fullName(mentor.getFullName())
+                .recipient(mentor.getEmail())
+                .subject("Welcome to Flyvest")
                 .messageBody(emailContent)
                 .build();
 

@@ -3,6 +3,7 @@ package com.flyvestmobile.flyvest.mobile.application.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table
-@Builder
+@SuperBuilder
 public class ConfirmationToken extends BaseEntity{
 
 

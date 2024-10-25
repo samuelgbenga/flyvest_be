@@ -2,13 +2,14 @@ package com.flyvestmobile.flyvest.mobile.application.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Builder
+@SuperBuilder
 @Table(name = "rating_tbl")
 public class Rating extends BaseEntity {
 
