@@ -1,17 +1,23 @@
 package com.flyvestmobile.flyvest.mobile.application.service.impl;
 
 import com.cloudinary.Api;
+import com.flyvestmobile.flyvest.mobile.application.entity.Booking;
 import com.flyvestmobile.flyvest.mobile.application.entity.Mentor;
 import com.flyvestmobile.flyvest.mobile.application.entity.Rating;
 import com.flyvestmobile.flyvest.mobile.application.entity.User;
 import com.flyvestmobile.flyvest.mobile.application.enums.Role;
+import com.flyvestmobile.flyvest.mobile.application.enums.Status;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.AlreadyExistsException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.InvalidInputException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.NotFoundException;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.BookingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.EmailDetails;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.BookResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.MentorDetailsResponse;
+import com.flyvestmobile.flyvest.mobile.application.repository.BookingRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.MentorRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.RatingRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.UserRepository;
@@ -29,8 +35,10 @@ import org.springframework.stereotype.Service;
 
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final FileUploadService fileUploadService;
     private final RatingRepository ratingRepository;
+    private final BookingRepository bookingRepository;
 
     @Value("${baseUrl}")
     private String baseUrl;
@@ -83,6 +92,9 @@ public class UserServiceImpl implements UserService {
 
         String generatedPassword = AccountUtils.generatePassword();
 
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.USER);
+
 
         // Create the Mentor entity with additional mentor-specific fields
         Mentor mentor = Mentor.builder()
@@ -92,6 +104,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(generatedPassword)) // Encrypt password
                 .country(request.getCountry())
                 .role(Role.MENTOR)  // Assign MENTOR role
+                .roles(roles)
                 .enabled(true)
                 .expertise(request.getExpertise())
                 .averageRating(0.0)  // Start with a zero rating
@@ -140,6 +153,49 @@ public class UserServiceImpl implements UserService {
         mentorRepository.save(mentor);
 
         return "Thank you for your rating";
+    }
+
+    // get mentor details by a user
+    @Override
+    public MentorDetailsResponse selectMentor(Long id) {
+
+        Mentor mentor = mentorRepository.findById(id).orElse(null);
+        if(mentor == null){
+            throw new NotFoundException("mentor not found");
+        }
+
+
+        return MentorDetailsResponse.builder()
+                .fullName(mentor.getFullName())
+                .country(mentor.getCountry())
+                .averageRating(mentor.getAverageRating())
+                .email(mentor.getEmail())
+                .expertise(mentor.getExpertise())
+                .profilePicture(mentor.getProfilePicture())
+                .build();
+    }
+
+    @Override
+    public BookResponse bookMentor(String email, BookingRequest request) {
+        Mentor mentor = mentorRepository.findById(request.getMentorId()).orElseThrow(()->new NotFoundException("Mentor Not found!"));
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User Not Found!"));
+
+        Booking booking = Booking.builder()
+                .mentor(mentor)
+                .user(user)
+                .sessionDateTime(request.getLocalDateTime())
+                .status(Status.PENDING)
+                .build();
+
+        mentor.getBookings().add(booking);
+        bookingRepository.save(booking);
+        mentorRepository.save(mentor);
+
+
+        return BookResponse.builder()
+                .responseCode("booking")
+                .responseMessage("Booking succeeded")
+                .build();
     }
 
 

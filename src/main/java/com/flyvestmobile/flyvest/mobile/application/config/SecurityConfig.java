@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -53,8 +55,18 @@ public class SecurityConfig {
                         .loginPage("/login")  // Custom login page endpoint
                         .successHandler((request, response, authentication) -> {
                             // On successful OAuth2 login, generate and add JWT to the response
-                            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                            String token = jwtService.generateToken(userDetails);
+                            String token;
+                            if (authentication instanceof OAuth2AuthenticationToken) {
+                                OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+                                token = jwtService.generateToken(oAuth2User);
+                            }
+
+                            else{
+                                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                                token = jwtService.generateToken(userDetails);
+                            }
+
+
                             response.addHeader("Authorization", "Bearer " + token);
                         })
                 )

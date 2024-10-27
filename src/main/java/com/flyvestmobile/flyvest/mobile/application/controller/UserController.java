@@ -1,8 +1,11 @@
 package com.flyvestmobile.flyvest.mobile.application.controller;
 
 import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.BookingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.BookResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.MentorDetailsResponse;
 import com.flyvestmobile.flyvest.mobile.application.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -38,5 +41,26 @@ public class UserController {
         String response = userService.rateMentor(request, email);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/mentor")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> selectMentor(@RequestParam Long mentorId){
+
+        MentorDetailsResponse mentor = userService.selectMentor(mentorId);
+
+        return ResponseEntity.ok(mentor);
+    }
+
+    @PostMapping("/mentor/booking")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> bookMentor(@RequestBody BookingRequest request){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        BookResponse result = userService.bookMentor(email, request);
+
+        return ResponseEntity.ok(result);
+    }
+
 
 }

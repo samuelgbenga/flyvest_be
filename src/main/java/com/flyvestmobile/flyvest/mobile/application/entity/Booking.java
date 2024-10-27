@@ -1,14 +1,12 @@
 package com.flyvestmobile.flyvest.mobile.application.entity;
 
 import com.flyvestmobile.flyvest.mobile.application.enums.Status;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Getter
@@ -20,8 +18,7 @@ import java.time.LocalDate;
 @Table(name = "booking_tbl")
 public class Booking extends BaseEntity{
 
-    private LocalDate sessionDate;
-    private String sessionTime;
+    private LocalDateTime sessionDateTime;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -31,5 +28,6 @@ public class Booking extends BaseEntity{
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
 
+    @Enumerated(EnumType.STRING)
     private Status status;
 }

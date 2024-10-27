@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -44,7 +45,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(Map<String, Object> extractClaims, UserDetails userDetails){
+    private String generateToken(Map<String, Object> extractClaims, UserDetails userDetails){
         return Jwts
                 .builder()
                 .setClaims(extractClaims)
@@ -56,10 +57,28 @@ public class JwtService {
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
     public String generateToken(UserDetails userDetails){
         return (generateToken(new HashMap<>(), userDetails));
     }
+
+    // for Oauth2
+    private String generateToken(Map<String, Object> extractClaims, OAuth2User oAuth2User){
+        return Jwts
+                .builder()
+                .setClaims(extractClaims)
+                .setSubject(oAuth2User.getAttribute("email"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() +
+                        1000 * 60 * 60 * 24
+                ))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+    public String generateToken(OAuth2User auth2User){
+        return (generateToken(new HashMap<>(), auth2User));
+    }
+
+
 
     public Boolean isTokenValid(String token, UserDetails userDetails){
         final String userName = extractUsername(token);

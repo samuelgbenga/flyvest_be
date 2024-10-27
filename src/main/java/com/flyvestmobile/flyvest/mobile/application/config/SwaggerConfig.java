@@ -16,9 +16,9 @@ public class SwaggerConfig {
         return new OpenAPI()
                 // General API information
                 .info(new Info()
-                        .title("Qlock-In API")
+                        .title("Flyvest API")
                         .version("1.0")
-                        .description("API documentation for Qlock-In application"))
+                        .description("API documentation for Flyvest application"))
                 // Security schemes component
                 .components(new Components()
                         .addSecuritySchemes("bearer-jwt", new SecurityScheme()
