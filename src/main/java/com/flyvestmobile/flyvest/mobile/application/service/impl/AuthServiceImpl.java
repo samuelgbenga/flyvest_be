@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -76,11 +77,15 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.USER);
+
         User user = User.builder()
                 .profilePicture(profilePictureUrl)
                 .fullName(authRequest.getFirstname() + " " + authRequest.getLastname())
                 .email(authRequest.getEmail())
                 .password(passwordEncoder.encode(authRequest.getPassword()))
+                .roles(roles)
                 .role(Role.USER)
                 .build();
 

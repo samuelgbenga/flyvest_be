@@ -28,7 +28,7 @@ public class AuthController {
     private final VerificationTokenService verificationTokenService;
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> registerUser(@ModelAttribute AuthRequest request) {
 
         try {
             AuthResponse registerUser = authService.register(request);

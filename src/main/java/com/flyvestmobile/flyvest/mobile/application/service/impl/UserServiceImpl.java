@@ -35,8 +35,10 @@ import org.springframework.stereotype.Service;
 
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +92,9 @@ public class UserServiceImpl implements UserService {
 
         String generatedPassword = AccountUtils.generatePassword();
 
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.USER);
+
 
         // Create the Mentor entity with additional mentor-specific fields
         Mentor mentor = Mentor.builder()
@@ -99,6 +104,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(generatedPassword)) // Encrypt password
                 .country(request.getCountry())
                 .role(Role.MENTOR)  // Assign MENTOR role
+                .roles(roles)
                 .enabled(true)
                 .expertise(request.getExpertise())
                 .averageRating(0.0)  // Start with a zero rating
