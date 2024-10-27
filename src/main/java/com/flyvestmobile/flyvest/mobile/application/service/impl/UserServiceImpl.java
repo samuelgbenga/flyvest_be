@@ -1,18 +1,23 @@
 package com.flyvestmobile.flyvest.mobile.application.service.impl;
 
 import com.cloudinary.Api;
+import com.flyvestmobile.flyvest.mobile.application.entity.Booking;
 import com.flyvestmobile.flyvest.mobile.application.entity.Mentor;
 import com.flyvestmobile.flyvest.mobile.application.entity.Rating;
 import com.flyvestmobile.flyvest.mobile.application.entity.User;
 import com.flyvestmobile.flyvest.mobile.application.enums.Role;
+import com.flyvestmobile.flyvest.mobile.application.enums.Status;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.AlreadyExistsException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.InvalidInputException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.NotFoundException;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.BookingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.EmailDetails;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.BookResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.MentorDetailsResponse;
+import com.flyvestmobile.flyvest.mobile.application.repository.BookingRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.MentorRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.RatingRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.UserRepository;
@@ -43,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final FileUploadService fileUploadService;
     private final RatingRepository ratingRepository;
+    private final BookingRepository bookingRepository;
 
     @Value("${baseUrl}")
     private String baseUrl;
@@ -163,8 +169,28 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    public BookResponse bookMentor(String email, BookingRequest request) {
+        Mentor mentor = mentorRepository.findById(request.getMentorId()).orElseThrow(()->new NotFoundException("Mentor Not found!"));
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User Not Found!"));
+
+        Booking booking = Booking.builder()
+                .mentor(mentor)
+                .user(user)
+                .sessionDateTime(request.getLocalDateTime())
+                .status(Status.PENDING)
+                .build();
+
+        mentor.getBookings().add(booking);
+        bookingRepository.save(booking);
+        mentorRepository.save(mentor);
 
 
+        return BookResponse.builder()
+                .responseCode("booking")
+                .responseMessage("Booking succeeded")
+                .build();
+    }
 
 
     private double calculateAverageRating(Long mentorId) {

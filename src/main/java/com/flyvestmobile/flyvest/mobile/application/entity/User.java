@@ -45,8 +45,6 @@ public class User extends BaseEntity implements  UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Goal> goals;
 
-    @OneToMany(mappedBy = "user")
-    private List<Booking> bookings;
 
     @OneToMany(mappedBy = "author")
     private List<Thread> forumThreads;

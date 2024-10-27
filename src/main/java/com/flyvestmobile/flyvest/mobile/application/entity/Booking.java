@@ -9,6 +9,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Getter
@@ -20,8 +21,7 @@ import java.time.LocalDate;
 @Table(name = "booking_tbl")
 public class Booking extends BaseEntity{
 
-    private LocalDate sessionDate;
-    private String sessionTime;
+    private LocalDateTime sessionDateTime;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
