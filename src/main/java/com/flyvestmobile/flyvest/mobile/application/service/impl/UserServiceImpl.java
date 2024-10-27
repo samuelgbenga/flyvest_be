@@ -12,6 +12,7 @@ import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorReq
 import com.flyvestmobile.flyvest.mobile.application.payload.request.EmailDetails;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
+import com.flyvestmobile.flyvest.mobile.application.payload.response.MentorDetailsResponse;
 import com.flyvestmobile.flyvest.mobile.application.repository.MentorRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.RatingRepository;
 import com.flyvestmobile.flyvest.mobile.application.repository.UserRepository;
@@ -141,6 +142,29 @@ public class UserServiceImpl implements UserService {
 
         return "Thank you for your rating";
     }
+
+    // get mentor details by a user
+    @Override
+    public MentorDetailsResponse selectMentor(Long id) {
+
+        Mentor mentor = mentorRepository.findById(id).orElse(null);
+        if(mentor == null){
+            throw new NotFoundException("mentor not found");
+        }
+
+
+        return MentorDetailsResponse.builder()
+                .fullName(mentor.getFullName())
+                .country(mentor.getCountry())
+                .averageRating(mentor.getAverageRating())
+                .email(mentor.getEmail())
+                .expertise(mentor.getExpertise())
+                .profilePicture(mentor.getProfilePicture())
+                .build();
+    }
+
+
+
 
 
     private double calculateAverageRating(Long mentorId) {
