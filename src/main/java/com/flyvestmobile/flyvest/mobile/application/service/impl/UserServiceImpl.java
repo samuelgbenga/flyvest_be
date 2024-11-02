@@ -1,26 +1,17 @@
 package com.flyvestmobile.flyvest.mobile.application.service.impl;
 
 import com.cloudinary.Api;
-import com.flyvestmobile.flyvest.mobile.application.entity.Booking;
-import com.flyvestmobile.flyvest.mobile.application.entity.Mentor;
-import com.flyvestmobile.flyvest.mobile.application.entity.Rating;
-import com.flyvestmobile.flyvest.mobile.application.entity.User;
+import com.flyvestmobile.flyvest.mobile.application.entity.*;
 import com.flyvestmobile.flyvest.mobile.application.enums.Role;
 import com.flyvestmobile.flyvest.mobile.application.enums.Status;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.AlreadyExistsException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.InvalidInputException;
 import com.flyvestmobile.flyvest.mobile.application.exceptions.NotFoundException;
-import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorRequest;
-import com.flyvestmobile.flyvest.mobile.application.payload.request.BookingRequest;
-import com.flyvestmobile.flyvest.mobile.application.payload.request.EmailDetails;
-import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.*;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.BookResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.MentorDetailsResponse;
-import com.flyvestmobile.flyvest.mobile.application.repository.BookingRepository;
-import com.flyvestmobile.flyvest.mobile.application.repository.MentorRepository;
-import com.flyvestmobile.flyvest.mobile.application.repository.RatingRepository;
-import com.flyvestmobile.flyvest.mobile.application.repository.UserRepository;
+import com.flyvestmobile.flyvest.mobile.application.repository.*;
 import com.flyvestmobile.flyvest.mobile.application.service.EmailService;
 import com.flyvestmobile.flyvest.mobile.application.service.FileUploadService;
 import com.flyvestmobile.flyvest.mobile.application.service.UserService;
@@ -51,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final FileUploadService fileUploadService;
     private final RatingRepository ratingRepository;
     private final BookingRepository bookingRepository;
+    private final GoalRepository goalRepository;
 
     @Value("${baseUrl}")
     private String baseUrl;
@@ -176,7 +168,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BookResponse bookMentor(String email, BookingRequest request) {
+    public ApiResponse bookMentor(String email, BookingRequest request) {
         Mentor mentor = mentorRepository.findById(request.getMentorId()).orElseThrow(()->new NotFoundException("Mentor Not found!"));
         User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User Not Found!"));
 
@@ -192,9 +184,33 @@ public class UserServiceImpl implements UserService {
         mentorRepository.save(mentor);
 
 
-        return BookResponse.builder()
+        return ApiResponse.builder()
                 .responseCode("booking")
                 .responseMessage("Booking succeeded")
+                .build();
+    }
+
+    @Override
+    public ApiResponse createGoal(String email, GoalRequest goalRequest) {
+
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found just in case!"));
+
+        Goal goal = Goal.builder()
+                .goalName(goalRequest.getGoalName())
+                .goalDescription(goalRequest.getGoalDescription())
+                .targetAmount(goalRequest.getTargetAmount())
+                .targetDate(goalRequest.getTargetDate())
+                .user(user)
+                .build();
+
+        user.getGoals().add(goal);
+
+        goalRepository.save(goal);
+        userRepository.save(user);
+
+        return ApiResponse.builder()
+                .responseCode("Goal Created")
+                .responseMessage("Goal has been created")
                 .build();
     }
 

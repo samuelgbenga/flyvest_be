@@ -2,6 +2,7 @@ package com.flyvestmobile.flyvest.mobile.application.service;
 
 import com.flyvestmobile.flyvest.mobile.application.payload.request.AddMentorRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.BookingRequest;
+import com.flyvestmobile.flyvest.mobile.application.payload.request.GoalRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.request.RatingRequest;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.ApiResponse;
 import com.flyvestmobile.flyvest.mobile.application.payload.response.BookResponse;
@@ -15,7 +16,13 @@ public interface UserService {
 
     MentorDetailsResponse selectMentor(Long id);
 
-    BookResponse bookMentor(String email, BookingRequest request);
+    ApiResponse bookMentor(String email, BookingRequest request);
+
+    ApiResponse createGoal(String email, GoalRequest goalRequest);
+
+
+
+
 
 
 }
